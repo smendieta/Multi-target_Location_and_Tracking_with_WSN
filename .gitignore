@@ -1,3 +1,7 @@
+# Matlab autosaving files
+*.m~
+*.asv
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
