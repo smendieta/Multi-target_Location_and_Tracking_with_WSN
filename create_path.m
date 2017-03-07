@@ -8,7 +8,7 @@ function [ users_path ] = create_path( users, dimensions, total_positions )
     for user = 1:users 
 
         % Initialization
-        position = floor(unifrnd(1,total_positions/2))
+        position = floor(unifrnd(1,total_positions/2));
                     
         mean_distance = 6;  % Mean distance in positions
         step_distance = 0.75;   % in meters

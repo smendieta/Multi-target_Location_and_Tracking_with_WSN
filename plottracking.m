@@ -3,7 +3,7 @@ function [ clip ] = plottracking( radiation, users_path, users_track,dimensions 
 
     f = figure('name','Tracking');
     figure(f);
-    set(f,'Visible','off')
+    set(f,'Visible','on')
     commandwindow;
     radiation_dimensions = size(radiation);
     frames = radiation_dimensions(3);
@@ -18,7 +18,7 @@ function [ clip ] = plottracking( radiation, users_path, users_track,dimensions 
     for frame = 1:frames
         hold on;
         surf(xaxis,yaxis,radiation(:,:,frame)','EdgeColor','none')
-        view(2);
+        view(3);
         colormap jet;
         grid on;
         caxis([0 20]);
@@ -26,7 +26,7 @@ function [ clip ] = plottracking( radiation, users_path, users_track,dimensions 
         xlabel('[m]');
         ylabel('[m]');
         colorlegend = colorbar;
-        colorlegend.Label.String = 'Electromagnetic field [mW]';
+        colorlegend.Label.String = 'RSS change';
         zlabel(colorlegend.Label.String);
         scatter(users_path(1,frame,:),users_path(2,frame,:),'o')
         scatter(users_track(1,frame,:),users_track(2,frame,:),'x')
