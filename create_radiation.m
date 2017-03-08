@@ -6,7 +6,7 @@ function [ radiation ] = create_radiation(dimensions, users_path, precision)
 
     % Initialization
     lengths = dimensions(:,2)-dimensions(:,1);
-    voxels = ceil(lengths./precision);  % Voxels(1)--> X_axis(columns), Voxels(2) --> Y_axis(rows)
+    voxels = ceil(lengths./precision);  % Voxels(1)--> X_axis(rows), Voxels(2) --> Y_axis(columns)
     users_path_size = size(users_path);
     steps = users_path_size(2);
     if length(users_path_size) > 2

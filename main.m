@@ -4,10 +4,10 @@ tic
 profile on
  
 % Initialization
-users = 5;
+users = 6;
 dimensions = [-12 12; -12 12]; % [x_min x_max; y_min y_max]
 total_steps = 100;
-precision = 0.1;
+precision = 0.5;
 
 %% Input
     % Paths that the targets follow inside the considered map
@@ -24,24 +24,21 @@ radiation = create_radiation(dimensions, users_path, precision);
 rss_change = radiation;
 
 % RF links - Change in RSS by each link - Simulation
-
-sensor_position = [dimensions(1,1) dimensions(1,2)/2 0 0 ; dimensions(2,1) 0 dimensions(2,1)/2 dimensions(2,2)/2];
+sensor_position = [-12 -6 0 6 12 -12 -6 0 6 12 -12 -6 0 6 12 -12 -6 0 6 12 -12 -6 0 6 12; -12 -12 -12 -12 -12 -6 -6 -6 -6 -6 0 0 0 0 0 6 6 6 6 6 12 12 12 12 12];
+%sensor_position = [dimensions(1,1) dimensions(1,2)/2 0 0 ; dimensions(2,1) 0 dimensions(2,1)/2 dimensions(2,2)/2];
 nsensors = length(sensor_position(1,:));
 nlinks = (nsensors^2-nsensors)/2;   % Number of links: L = (K^2-K)/2 (K: number of sensors)
-link_weights = locate_ellipses(dimensions,sensor_position,precision,nlinks);
+link_weights = locate_link_ellipses(dimensions,sensor_position,precision,nlinks);
 rss_change_link = rss_links(rss_change,link_weights,nlinks);
 
-% Sensors
-% sensor_position = [dimensions(1,1) dimensions(1,2)/2 0 0 ; dimensions(2,1) 0 dimensions(2,1)/2 dimensions(2,2)/2];
-% range = 2; %in meters
-% nsensors = length(sensor_position(1,:));
-% sensor_radiation = zeros([size(radiation) nsensors]);
-% for step = 1:total_positions
-%      for sensor = 1:nsensors
-%          sensor_radiation(:,:,step,sensor) = sensor_measurement(sensor_position(:,sensor), dimensions, radiation, range, precision);
-%      end
-% end
+%% RTI Image Estimation
+% This section is part of the estimation algorithm, after the simulation
+% (or real environment test)
+% Using Regularized Least-Squares (RLS) approach, the RSS change in each
+% voxel is estimated (in simulation this is called "rss_change")
 
+rss_change_estimate = rss_estimation(dimensions, rss_change_link, link_weights, precision);
+ 
 %% Tracking algorithm
 % Tracking
 users_track = users_path + randn(2,total_steps,users);
@@ -64,6 +61,7 @@ axis([dimensions(1,1) dimensions(1,2) dimensions(2,1) dimensions(2,2)])
 loops = 1;
 fps = 12;
 clip = plottracking(radiation,users_path, users_track, dimensions);
-movie(clip,loops,fps);
+clip2 = plottracking(rss_change_estimate,users_path, users_track, dimensions);
+%movie(clip,loops,fps);
 profile viewer
 toc

@@ -1,4 +1,4 @@
-function [ link_weights ] = locate_ellipses(dimensions,sensor_position,precision,nlinks);
+function [ link_weights ] = locate_link_ellipses(dimensions,sensor_position,precision,nlinks);
 %LOCATE_ELLIPSES Generates a matrix of the voxels' weights according to the
 %ellipse model of each link
 %   dimensions          Dimensions of the map in meters

@@ -18,7 +18,7 @@ function [ clip ] = plottracking( radiation, users_path, users_track,dimensions 
     for frame = 1:frames
         hold on;
         surf(xaxis,yaxis,radiation(:,:,frame)','EdgeColor','none')
-        view(3);
+        view(2);
         colormap jet;
         grid on;
         caxis([0 20]);
@@ -33,6 +33,6 @@ function [ clip ] = plottracking( radiation, users_path, users_track,dimensions 
         drawnow
         clip(frame) = getframe;
         cla
-    end   
+    end 
     set(f,'Visible','on')
 end
