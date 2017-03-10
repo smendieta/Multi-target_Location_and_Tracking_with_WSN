@@ -7,6 +7,7 @@ profile on
 users = 6;
 dimensions = [-12 12; -12 12]; % [x_min x_max; y_min y_max]
 total_steps = 100;
+calibration_steps = 5;
 precision = 0.5;
 
 %% Input
@@ -15,7 +16,8 @@ users_path = create_path(users, dimensions, total_steps);
 
 %% Generalized radiation
     % Footprint on the map caused by the presence of a target
-radiation = create_radiation(dimensions, users_path, precision);
+radiation_amplitude = 20;     % Maximum change in signal, when a target is present
+radiation = create_radiation(dimensions, users_path, precision,calibration_steps, radiation_amplitude);
 %% RF section
     % Measurements based on the change in RSS (received signal strength) in
     % each link (i.e. conexion between two sensors) caused by each voxel
@@ -39,9 +41,22 @@ rss_change_link = rss_links(rss_change,link_weights,nlinks);
 
 rss_change_estimate = rss_estimation(dimensions, rss_change_link, link_weights, precision);
  
+% Gaussian filter (not implemented yet, excessive execution time)
+
+%% Multiple Target Tracking with RTI images (RF sensors)
+
+% Test tracking
+users_track = users_path + randn(2,total_steps,users);
+% Thresholding
+filtered_rti = detection_thresholding(rss_change_estimate, calibration_steps);
+% Clustering
+
+% Cluster heads selection
+
+% Target tracking
 %% Tracking algorithm
 % Tracking
-users_track = users_path + randn(2,total_steps,users);
+%users_track = users_path + randn(2,total_steps,users);
 
 % Plots
 figure('name','Users paths')
@@ -60,8 +75,9 @@ axis([dimensions(1,1) dimensions(1,2) dimensions(2,1) dimensions(2,2)])
 % Plot radiation for all users
 loops = 1;
 fps = 12;
-clip = plottracking(radiation,users_path, users_track, dimensions);
-clip2 = plottracking(rss_change_estimate,users_path, users_track, dimensions);
+clip = plottracking(radiation,users_path, users_track, dimensions, calibration_steps);
+clip2 = plottracking(rss_change_estimate,users_path, users_track, dimensions, calibration_steps);
+clip3 = plottracking(filtered_rti,users_path, users_track, dimensions, calibration_steps);
 %movie(clip,loops,fps);
 profile viewer
 toc

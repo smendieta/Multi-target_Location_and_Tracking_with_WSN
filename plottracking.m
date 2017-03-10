@@ -1,4 +1,4 @@
-function [ clip ] = plottracking( radiation, users_path, users_track,dimensions )
+function [ clip ] = plottracking( radiation, users_path, users_track,dimensions, calibration_steps)
 %PLOTTRACKING plots a matrix of 3 dimension as 2 spacial and 1 time dimensions
 
     f = figure('name','Tracking');
@@ -28,8 +28,10 @@ function [ clip ] = plottracking( radiation, users_path, users_track,dimensions 
         colorlegend = colorbar;
         colorlegend.Label.String = 'RSS change';
         zlabel(colorlegend.Label.String);
-        scatter(users_path(1,frame,:),users_path(2,frame,:),'o')
-        scatter(users_track(1,frame,:),users_track(2,frame,:),'x')
+        if(frame > calibration_steps)
+            scatter(users_path(1,frame-calibration_steps,:),users_path(2,frame-calibration_steps,:),'o')
+            scatter(users_track(1,frame-calibration_steps,:),users_track(2,frame-calibration_steps,:),'x')
+        end
         drawnow
         clip(frame) = getframe;
         cla

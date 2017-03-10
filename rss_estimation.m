@@ -16,7 +16,7 @@ function [ rss_change_estimate ] = rss_estimation( dimensions, rss_change_link, 
     % Noise deviation - Regularization parameter
     sigma_n = 1;
     % Voxel measurements' deviation
-    sigma_x = 1.0528;%0.2236;
+    sigma_x = 1.0528; %0.2236 dB;
     % Voxels' correlation distance
     delta_c = 3;
     % Covariance matrix of rss_change - Using exponential spatial decay

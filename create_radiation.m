@@ -1,4 +1,4 @@
-function [ radiation ] = create_radiation(dimensions, users_path, precision)
+function [ radiation ] = create_radiation(dimensions, users_path, precision, calibration_steps, radiation_amplitude)
 %CREATE_RADIATION Creates the radiation (signal strength) for all the users
 % in the surface depending on its path
 %   dimensions  Dimensions of the map in meters 
@@ -8,7 +8,7 @@ function [ radiation ] = create_radiation(dimensions, users_path, precision)
     lengths = dimensions(:,2)-dimensions(:,1);
     voxels = ceil(lengths./precision);  % Voxels(1)--> X_axis(rows), Voxels(2) --> Y_axis(columns)
     users_path_size = size(users_path);
-    steps = users_path_size(2);
+    steps = users_path_size(2)+calibration_steps;
     if length(users_path_size) > 2
         users = users_path_size(3);
     else
@@ -32,10 +32,9 @@ function [ radiation ] = create_radiation(dimensions, users_path, precision)
     users_voxels_y(users_voxels_y < 1) = 1;
     users_voxels(2,:,:) = users_voxels_y;
     
-    % Gaussian radiation (i.e. change of Received Signal Strenght)
-    
-    amplitude = 20;     % Maximum change in signal, when a target is present
-    target_width = [0.5 0.5];   % Target width (meters) in dimensions [x y]
+    % Gaussian radiation 
+   
+    target_width = [1 0.5];   % Target width (meters) in dimensions [x y]
     target_width_invoxels = target_width./precision;
     radius = (1/precision).*[target_width_invoxels(1)^2 target_width_invoxels(2)^2]; % variance(1,2) = variance(2,1) always, if not --> complex result
     rotation = 0;
@@ -43,12 +42,12 @@ function [ radiation ] = create_radiation(dimensions, users_path, precision)
    
     % Creating total radiation
     
-    for step = 1:steps
+    for step = (calibration_steps+1):steps
         for user = 1:users
-            if sum(isnan(users_voxels(:,step,user))) == 0
-                center = [users_voxels(1,step, user) users_voxels(2,step, user)];
+            if sum(isnan(users_voxels(:,step-calibration_steps,user))) == 0
+                center = [users_voxels(1,step-calibration_steps, user) users_voxels(2,step-calibration_steps, user)];
                 radiation(:,:,step) = radiation(:,:,step)...
-                +gaussianradiation(amplitude,center,radius, rotation, noiselevel,voxels);       
+                +gaussianradiation(radiation_amplitude,center,radius, rotation, noiselevel,voxels);       
             end
         end
     end

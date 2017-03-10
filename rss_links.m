@@ -13,16 +13,14 @@ function [ rss_change_link ] = rss_links( rss_change, link_weights, nlinks )
     rss_change_vector = zeros(size_rss_change(1)*size_rss_change(2),steps);
     rss_change_link = zeros(nlinks,steps);
     
-    % Additive noise
-    n = 0.25*randn(size_rss_change(1)*size_rss_change(2),1);
-    
     % Converting RSS change matrix into a vector Mx1 (M: number of voxels)
     for step = 1:steps
         c = rss_change(:,:,step);
         rss_change_vector(:,step) = c(:);
-        
+        % Additive noise
+        n = randn(nlinks,1);
         % Vector of the contribution of RSS change of each link
-        rss_change_link(:,step) = link_weights*rss_change_vector(:,step); % + noise
+        rss_change_link(:,step) = link_weights*rss_change_vector(:,step)+n;
     end
 end
 
