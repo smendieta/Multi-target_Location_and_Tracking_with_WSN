@@ -2,17 +2,20 @@
 clc, clear all, close all
 tic
 profile on
- 
+
+[parameters, dimensions]= input_GUI;
 % Initialization
 users = 6;
 dimensions = [-12 12; -12 12]; % [x_min x_max; y_min y_max]
 total_steps = 100;
 calibration_steps = 5;
 precision = 0.5;
+mean_distance = 6;  % Mean distance in positions
+step_distance = 0.75;   % in meters
 
 %% Input
     % Paths that the targets follow inside the considered map
-users_path = create_path(users, dimensions, total_steps);
+users_path = create_path(users, dimensions, total_steps, step_distance, mean_distance);
 
 %% Generalized radiation
     % Footprint on the map caused by the presence of a target
@@ -50,7 +53,7 @@ users_track = users_path + randn(2,total_steps,users);
 % Thresholding
 filtered_rti = detection_thresholding(rss_change_estimate, calibration_steps);
 % Clustering
-
+clusters_rti = clustering(filtered_rti, calibration_steps);
 % Cluster heads selection
 
 % Target tracking

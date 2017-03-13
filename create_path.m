@@ -1,4 +1,4 @@
-function [ users_path ] = create_path( users, dimensions, total_positions )
+function [ users_path ] = create_path( users, dimensions, total_positions, step_distance, mean_distance )
 %CREATE_PATH Creates a random path for each user in a surface
 %   users       Number of users
 %   dimensions  Dimensions of the surface in meters
@@ -10,9 +10,6 @@ function [ users_path ] = create_path( users, dimensions, total_positions )
         % Initialization
         position = floor(unifrnd(1,total_positions/2));
                     
-        mean_distance = 6;  % Mean distance in positions
-        step_distance = 0.75;   % in meters
-        center = mean(dimensions,2);
         gate = [floor(unifrnd(dimensions(1,1),dimensions(1,2))) floor(unifrnd(dimensions(2,1),dimensions(2,2)))]; % Deviation of the input position of each user in each side
         side = floor(4*rand);
         is_alive = true;
