@@ -1,4 +1,4 @@
-function [ radiation ] = create_radiation(dimensions, users_path, precision, calibration_steps, radiation_amplitude)
+function [ radiation ] = create_radiation(dimensions, users_path, precision, calibration_steps, radiation_amplitude, target_width, rotation, noiselevel)
 %CREATE_RADIATION Creates the radiation (signal strength) for all the users
 % in the surface depending on its path
 %   dimensions  Dimensions of the map in meters 
@@ -16,7 +16,7 @@ function [ radiation ] = create_radiation(dimensions, users_path, precision, cal
     end
     
     % First radiation, reference scenario (empty space without people)
-    background_noise = -log(rand(voxels(1),voxels(2),steps));
+    background_noise = -log(rand(voxels(1),voxels(2),steps));   % Exponential distribution
     radiation = zeros(voxels(1),voxels(2),steps);
 
     % Associating coordinates to voxels
@@ -33,12 +33,8 @@ function [ radiation ] = create_radiation(dimensions, users_path, precision, cal
     users_voxels(2,:,:) = users_voxels_y;
     
     % Gaussian radiation 
-   
-    target_width = [1 0.5];   % Target width (meters) in dimensions [x y]
     target_width_invoxels = target_width./precision;
-    radius = (1/precision).*[target_width_invoxels(1)^2 target_width_invoxels(2)^2]; % variance(1,2) = variance(2,1) always, if not --> complex result
-    rotation = 0;
-    noiselevel = 0.25;
+    radius = [target_width_invoxels(1)^2 target_width_invoxels(2)^2]; % variance(1,2) = variance(2,1) always, if not --> complex result
    
     % Creating total radiation
     

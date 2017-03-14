@@ -19,8 +19,15 @@ users_path = create_path(users, dimensions, total_steps, step_distance, mean_dis
 
 %% Generalized radiation
     % Footprint on the map caused by the presence of a target
+
+% Gaussian radiation characteristics
 radiation_amplitude = 20;     % Maximum change in signal, when a target is present
-radiation = create_radiation(dimensions, users_path, precision,calibration_steps, radiation_amplitude);
+target_width = [1 0.5];   % Target width (meters) in dimensions [x y]
+rotation = 0;   % Target rotation in radians
+noiselevel = 0.25;  % Noise deviation for the gaussian function (i.e. noiselevel*randn)
+
+% RF radiation
+radiation = create_radiation(dimensions, users_path, precision,calibration_steps, radiation_amplitude, target_width, rotation, noiselevel );
 %% RF section
     % Measurements based on the change in RSS (received signal strength) in
     % each link (i.e. conexion between two sensors) caused by each voxel
@@ -78,9 +85,10 @@ axis([dimensions(1,1) dimensions(1,2) dimensions(2,1) dimensions(2,2)])
 % Plot radiation for all users
 loops = 1;
 fps = 12;
-clip = plottracking(radiation,users_path, users_track, dimensions, calibration_steps);
-clip2 = plottracking(rss_change_estimate,users_path, users_track, dimensions, calibration_steps);
-clip3 = plottracking(filtered_rti,users_path, users_track, dimensions, calibration_steps);
-%movie(clip,loops,fps);
+nview = 2;
+clip = plottracking(radiation,users_path, users_track, dimensions, calibration_steps, nview);
+clip2 = plottracking(rss_change_estimate,users_path, users_track, dimensions, calibration_steps,nview);
+clip3 = plottracking(filtered_rti,users_path, users_track, dimensions, calibration_steps,nview);
+movie(clip,loops,fps);
 profile viewer
 toc
