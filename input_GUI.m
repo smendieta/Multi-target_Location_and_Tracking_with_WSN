@@ -22,7 +22,7 @@ function varargout = input_GUI(varargin)
 
 % Edit the above text to modify the response to help input_GUI
 
-% Last Modified by GUIDE v2.5 14-Mar-2017 01:08:15
+% Last Modified by GUIDE v2.5 22-Mar-2017 21:07:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -69,9 +69,11 @@ handles.tab4 = uitab('Parent',handles.tgroup,'Title','Algorithm Configuration');
 % Place panels into each tab
 set(handles.panel1,'Parent',handles.tab1);
 set(handles.panel2,'Parent',handles.tab2);
+set(handles.panel3,'Parent',handles.tab3);
 
 % Reposition of each panel to same location as panel 1
 set(handles.panel2,'position',get(handles.panel1,'position'));
+set(handles.panel3,'position',get(handles.panel1,'position'));
 
 % Create RADIATION MODEL tab group
 handles.tgroup_rad = uitabgroup('Parent',handles.panel2,'TabLocation','left');
@@ -87,6 +89,30 @@ set(handles.panel_lidar, 'Parent', handles.tab3_rad);
 % Reposition of panels to same position as panel_rf
 set(handles.panel_t, 'position',get(handles.panel_rf,'position'));
 set(handles.panel_lidar, 'position', get(handles.panel_rf,'position'));
+
+% Sensor button group
+handles.rf_control = uicontrol('Parent',handles.uibuttongroup_sensors,'Style','radio','String','RF','Position',[10 110 50 20]);
+handles.lidar_control = uicontrol('Parent',handles.uibuttongroup_sensors,'Style','radio','String','LIDAR','Position',[10 80 50 20]);
+handles.t_control = uicontrol('Parent',handles.uibuttongroup_sensors,'Style','radio','String','T','Position',[10 50 50 20]);
+
+% Sensors overview UITABLE
+set(handles.uitable_sensors,'ColumnName',{'','Type','X','Y','Active'},'ColumnWidth',{68,50,50,67},'Data',[],'ColumnEditable',[false false false true]);
+
+% Input simulation - fixing axes parameters
+axes(handles.axes1)
+grid on
+title('Paths of the targets in the monitored area')
+xlabel('X')
+ylabel('Y')
+axis([handles.xmin handles.xmax handles.ymin handles.ymax])
+
+% Sensor map - fixing axes parameters
+axes(handles.axes6)
+grid on
+title('Sensors Location')
+xlabel('X')
+ylabel('Y')
+axis([handles.xmin handles.xmax handles.ymin handles.ymax])
 
 % Update handles structure
 guidata(hObject, handles);
@@ -106,9 +132,9 @@ function varargout = input_GUI_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 % varargout{1} = [ntargets nsteps step_distance mean_distance ]
-varargout{1} = [handles.ntargets handles.nsteps handles.step_distance handles.mean_distance ]; 
-varargout{2} = [handles.xmin handles.xmax ; handles.ymin handles.ymax];
+varargout{1} = 0;
 
+%% Start INPUT and close GUI
 % --- Executes on button press in start.
 function start_Callback(hObject, eventdata, handles)
 % hObject    handle to start (see GCBO)
@@ -116,6 +142,7 @@ function start_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 uiresume;
 
+%% Input simulation
 function text_targets_Callback(hObject, eventdata, handles)
 % hObject    handle to text_targets (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -351,18 +378,15 @@ function button_createpaths_Callback(hObject, eventdata, handles)
         plot(handles.users_path(1,:,i),handles.users_path(2,:,i))
         hold on
     end
-    hold on
-    grid on
-    title('Paths of the targets in the monitored area')
-    xlabel('X')
-    ylabel('Y')
-    axis([handles.dimensions(1,1) handles.dimensions(1,2) handles.dimensions(2,1) handles.dimensions(2,2)])
     
+    axis([handles.dimensions(1,1) handles.dimensions(1,2) handles.dimensions(2,1) handles.dimensions(2,2)])
+    axes(handles.axes6)
+    axis([handles.dimensions(1,1) handles.dimensions(1,2) handles.dimensions(2,1) handles.dimensions(2,2)])
     % Update handles structure
     guidata(hObject, handles);
 
 
-    
+%% Radiation Model
 function text_stepdistance_Callback(hObject, eventdata, handles)
 % hObject    handle to text_stepdistance (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -619,7 +643,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function text_rotation_Callback(hObject, eventdata, handles)
 % hObject    handle to text_rotation (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -707,6 +730,8 @@ function button_createradiation_Callback(hObject, eventdata, handles)
 % Parameter Settings
 handles.target_width = [handles.targetwidth_x handles.targetwidth_y];
 set(handles.text_ok,'Visible','off')
+set(handles.button_play2d,'Enable','on')
+set(handles.button_play3d,'Enable','on')
 tic
 % RF radiation
 handles.radiation = create_radiation(handles.dimensions, handles.users_path, handles.precision, handles.calibration, handles.rf_amplitude, handles.target_width, handles.rotation, handles.noiselevel );
@@ -727,8 +752,10 @@ global state;
 state.view = 2;
 % Radiation movie 2D
 set(handles.button_pause,'Enable','on','String','Pause')
+set(handles.button_stop,'Enable','on')
 axes(handles.axes3);
 cla
+colorbar('peer', handles.axes3);
 plottracking(1, handles.radiation, handles.users_path, handles.dimensions, handles.calibration, 2);
 if state.interrupted == 0
     set(handles.button_pause,'Enable','off')
@@ -745,6 +772,7 @@ global state;
 state.view = 3;
 % Radiation movie 3D
 set(handles.button_pause,'Enable','on','String','Pause')
+set(handles.button_stop,'Enable','on')
 
 axes(handles.axes3);
 cla
@@ -774,4 +802,212 @@ global state;
 % Update handles structure
 guidata(hObject, handles);
     
-    
+% --- Executes on button press in button_stop.
+function button_stop_Callback(hObject, eventdata, handles)
+% hObject    handle to button_stop (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global state;
+state.interrupted = true;
+set(handles.button_stop,'Enable','off');
+set(handles.button_pause,'Enable','off','String','Pause');
+axes(handles.axes3)
+cla
+% Update handles structure
+guidata(hObject, handles);
+
+
+%% Sensor Configuration
+
+% --- Executes on button press in pushbutton_addsensor.
+function pushbutton_addsensor_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_addsensor (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.newsensor_x = str2double(get(handles.text_newsensor_x,'String'));
+handles.newsensor_y = str2double(get(handles.text_newsensor_y,'String'));
+sensor_types = cellstr(get(handles.popupmenu_sensors,'String'));
+handles.selected_sensor = sensor_types{get(handles.popupmenu_sensors,'Value')};
+if strcmp(handles.selected_sensor, 'RF')
+    sensor_color = 'm';
+elseif strcmp(handles.selected_sensor, 'LIDAR')
+    sensor_color = 'c';
+else
+    sensor_color = 'g';
+end
+axes(handles.axes6)
+hold on
+plot(handles.newsensor_x, handles.newsensor_y,'x','Color',sensor_color)
+
+
+% Includes the sensor characteristics in the Table 'Sensors overview'
+if sum(size(get(handles.uitable_sensors,'Data'))) == 0
+set(handles.uitable_sensors,'Data',[{handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
+else
+set(handles.uitable_sensors,'Data',[get(handles.uitable_sensors,'Data') ; {handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
+end
+% Update handles structure
+guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbutton_loadtemplate.
+function pushbutton_loadtemplate_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_loadtemplate (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton_savetemplate.
+function pushbutton_savetemplate_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_savetemplate (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in button_clearmap.
+function button_clearmap_Callback(hObject, eventdata, handles)
+% hObject    handle to button_clearmap (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+axes(handles.axes6)
+cla
+
+% --- Executes on selection change in popupmenu_sensors.
+function popupmenu_sensors_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu_sensors (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+sensor_types = cellstr(get(handles.popupmenu_sensors,'String'));
+handles.selected_sensor = sensor_types{get(handles.popupmenu_sensors,'Value')};
+% Update handles structure
+guidata(hObject, handles);
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu_sensors contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu_sensors
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu_sensors_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu_sensors (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+sensor_types = cellstr(get(hObject,'String'));
+handles.selected_sensor = sensor_types{get(hObject,'Value')};
+% Update handles structure
+guidata(hObject, handles);
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+delete(hObject);
+
+
+function text_newsensor_x_Callback(hObject, eventdata, handles)
+% hObject    handle to text_newsensor_x (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.newsensor_x = str2double(get(handles.text_newsensor_x,'String'));
+% Update handles structure
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of text_newsensor_x as text
+%        str2double(get(hObject,'String')) returns contents of text_newsensor_x as a double
+% Press enter button 
+key = get(gcf,'CurrentKey');
+if(strcmp (key , 'return'))
+    pushbutton_addsensor_Callback(hObject, eventdata, handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function text_newsensor_x_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to text_newsensor_x (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+% handles    structure with handles and user data (see GUIDATA)
+handles.newsensor_x = str2double(get(hObject,'String'));
+% Update handles structure
+guidata(hObject, handles);
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function text_newsensor_y_Callback(hObject, eventdata, handles)
+% hObject    handle to text_newsensor_y (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.newsensor_y = str2double(get(handles.text_newsensor_y,'String'));
+% Update handles structure
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of text_newsensor_y as text
+%        str2double(get(hObject,'String')) returns contents of text_newsensor_y as a double
+% Press enter button 
+key = get(gcf,'CurrentKey');
+if(strcmp (key , 'return'))
+    pushbutton_addsensor_Callback(hObject, eventdata, handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function text_newsensor_y_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to text_newsensor_y (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+% handles    structure with handles and user data (see GUIDATA)
+handles.newsensor_y = str2double(get(hObject,'String'));
+% Update handles structure
+guidata(hObject, handles);
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton_addinmap.
+function pushbutton_addinmap_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_addinmap (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+axes(handles.axes6)
+[handles.newsensor_x, handles.newsensor_y] = ginput(1);
+
+if get(handles.rf_control,'Value')
+    sensor_color = 'm';
+    handles.selected_sensor = get(handles.rf_control,'String');
+elseif get(handles.lidar_control,'Value')
+    sensor_color = 'c';
+    handles.selected_sensor = get(handles.lidar_control,'String');
+else
+    sensor_color = 'g';
+    handles.selected_sensor = get(handles.t_control,'String');
+end
+hold on
+plot(handles.newsensor_x, handles.newsensor_y,'x','Color',sensor_color)
+
+
+% Includes the sensor characteristics in the Table 'Sensors overview'
+if sum(size(get(handles.uitable_sensors,'Data'))) == 0
+set(handles.uitable_sensors,'Data',[{handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
+else
+set(handles.uitable_sensors,'Data',[get(handles.uitable_sensors,'Data') ; {handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbutton16.
+function pushbutton16_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton16 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

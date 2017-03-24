@@ -27,9 +27,9 @@ state = struct('interrupted', false,'ini_frame',initial_frame,'view',nview);
         axis([dimensions(1,1) dimensions(1,2) dimensions(2,1) dimensions(2,2) zmin zmax])
         xlabel('[m]');
         ylabel('[m]');
-        colorlegend = colorbar;
-        colorlegend.Label.String = 'RSS change';
-        zlabel(colorlegend.Label.String);
+%         colorlegend = colorbar;
+%         colorlegend.Label.String = 'RSS change';
+%         zlabel(colorlegend.Label.String);
 %         if(frame > calibration_steps)
 %             scatter(users_path(1,frame-calibration_steps,:),users_path(2,frame-calibration_steps,:),'o')
 %             scatter(users_track(1,frame-calibration_steps,:),users_track(2,frame-calibration_steps,:),'x')
