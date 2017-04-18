@@ -22,7 +22,7 @@ function varargout = input_GUI(varargin)
 
 % Edit the above text to modify the response to help input_GUI
 
-% Last Modified by GUIDE v2.5 22-Mar-2017 21:07:06
+% Last Modified by GUIDE v2.5 25-Mar-2017 16:52:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -96,12 +96,20 @@ handles.lidar_control = uicontrol('Parent',handles.uibuttongroup_sensors,'Style'
 handles.t_control = uicontrol('Parent',handles.uibuttongroup_sensors,'Style','radio','String','T','Position',[10 50 50 20]);
 
 % Sensors overview UITABLE
-set(handles.uitable_sensors,'ColumnName',{'','Type','X','Y','Active'},'ColumnWidth',{68,50,50,67},'Data',[],'ColumnEditable',[false false false true]);
+set(handles.uitable_sensors,'ColumnName',{'','Type','X','Y','Active'},'ColumnWidth',{20,58,50,50,57},'Data',[],'ColumnEditable',true(1,5));
 
 % Input simulation - fixing axes parameters
 axes(handles.axes1)
 grid on
 title('Paths of the targets in the monitored area')
+xlabel('X')
+ylabel('Y')
+axis([handles.xmin handles.xmax handles.ymin handles.ymax])
+
+% Radiation model - fixing axes parameters
+axes(handles.axes3)
+grid on
+title('Radiation')
 xlabel('X')
 ylabel('Y')
 axis([handles.xmin handles.xmax handles.ymin handles.ymax])
@@ -113,6 +121,9 @@ title('Sensors Location')
 xlabel('X')
 ylabel('Y')
 axis([handles.xmin handles.xmax handles.ymin handles.ymax])
+
+% Initialization "save file"
+handles.saved_sensors = false;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -374,11 +385,15 @@ function button_createpaths_Callback(hObject, eventdata, handles)
     handles.users_path = create_path(handles.ntargets, handles.dimensions, handles.nsteps, handles.step_distance, handles.mean_distance);
     axes(handles.axes1);
     cla
+ 
     for i = 1:handles.ntargets
         plot(handles.users_path(1,:,i),handles.users_path(2,:,i))
         hold on
     end
-    
+    grid on
+    title('Paths of the targets in the monitored area')
+    xlabel('X')
+    ylabel('Y')
     axis([handles.dimensions(1,1) handles.dimensions(1,2) handles.dimensions(2,1) handles.dimensions(2,2)])
     axes(handles.axes6)
     axis([handles.dimensions(1,1) handles.dimensions(1,2) handles.dimensions(2,1) handles.dimensions(2,2)])
@@ -759,6 +774,7 @@ colorbar('peer', handles.axes3);
 plottracking(1, handles.radiation, handles.users_path, handles.dimensions, handles.calibration, 2);
 if state.interrupted == 0
     set(handles.button_pause,'Enable','off')
+    set(handles.button_stop,'Enable','off')
 end
 % Update handles structure
 guidata(hObject, handles);
@@ -778,7 +794,8 @@ axes(handles.axes3);
 cla
 plottracking(1, handles.radiation, handles.users_path, handles.dimensions, handles.calibration, 3);
 if state.interrupted == 0
-    set(handles.button_pause,'Enable','off')
+    set(handles.button_pause,'Enable','off');
+    set(handles.button_stop,'Enable','off');
 end
 % Update handles structure
 guidata(hObject, handles);
@@ -842,35 +859,32 @@ plot(handles.newsensor_x, handles.newsensor_y,'x','Color',sensor_color)
 
 % Includes the sensor characteristics in the Table 'Sensors overview'
 if sum(size(get(handles.uitable_sensors,'Data'))) == 0
-set(handles.uitable_sensors,'Data',[{handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
+set(handles.uitable_sensors,'Data',[{false},{handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
 else
-set(handles.uitable_sensors,'Data',[get(handles.uitable_sensors,'Data') ; {handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
+set(handles.uitable_sensors,'Data',[get(handles.uitable_sensors,'Data') ; {false},{handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
 end
 % Update handles structure
 guidata(hObject, handles);
 
 
-% --- Executes on button press in pushbutton_loadtemplate.
-function pushbutton_loadtemplate_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_loadtemplate (see GCBO)
+% --- Executes on button press in pushbutton_loadsensors.
+function pushbutton_loadsensors_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_loadsensors (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on button press in pushbutton_savetemplate.
-function pushbutton_savetemplate_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_savetemplate (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in button_clearmap.
-function button_clearmap_Callback(hObject, eventdata, handles)
-% hObject    handle to button_clearmap (see GCBO)
+% --- Executes on button press in button_clearall.
+function button_clearall_Callback(hObject, eventdata, handles)
+% hObject    handle to button_clearall (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 axes(handles.axes6)
 cla
+set(handles.uitable_sensors,'Data',[]);
+% Update handles structure
+guidata(hObject, handles);
+
 
 % --- Executes on selection change in popupmenu_sensors.
 function popupmenu_sensors_Callback(hObject, eventdata, handles)
@@ -981,6 +995,7 @@ function pushbutton_addinmap_Callback(hObject, eventdata, handles)
 axes(handles.axes6)
 [handles.newsensor_x, handles.newsensor_y] = ginput(1);
 
+
 if get(handles.rf_control,'Value')
     sensor_color = 'm';
     handles.selected_sensor = get(handles.rf_control,'String');
@@ -997,17 +1012,101 @@ plot(handles.newsensor_x, handles.newsensor_y,'x','Color',sensor_color)
 
 % Includes the sensor characteristics in the Table 'Sensors overview'
 if sum(size(get(handles.uitable_sensors,'Data'))) == 0
-set(handles.uitable_sensors,'Data',[{handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
+set(handles.uitable_sensors,'Data',[{false},{handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
 else
-set(handles.uitable_sensors,'Data',[get(handles.uitable_sensors,'Data') ; {handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
+set(handles.uitable_sensors,'Data',[get(handles.uitable_sensors,'Data') ; {false},{handles.selected_sensor}, {handles.newsensor_x}, {handles.newsensor_y}, {true}]);
 end
 
 % Update handles structure
 guidata(hObject, handles);
 
 
-% --- Executes on button press in pushbutton16.
-function pushbutton16_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton16 (see GCBO)
+% --- Executes on button press in button_deletesensors.
+function button_deletesensors_Callback(hObject, eventdata, handles)
+% hObject    handle to button_deletesensors (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+sensordata = get(handles.uitable_sensors,'Data');
+size_sensordata = size(sensordata);
+nsensors = size_sensordata(1);
+non_deleted_rows = [];
+for sensor = 1:nsensors
+    if sensordata{sensor,1} == 0
+       non_deleted_rows = [non_deleted_rows sensor];
+    end
+end
+sensordata = sensordata(non_deleted_rows,:);
+set(handles.uitable_sensors,'Data',sensordata);
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+function save_filename(hObject, eventdata, handles)
+% hObject    handle to button_savesensors (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% --- Executes on button press in button_savesensors.
+[handles.filename,handles.pathname] = uiputfile({'*.csv','CSV file (*.csv)'},'Saving sensors');
+handles.file  = fullfile(handles.pathname,handles.filename);
+% Update handles structure
+guidata(hObject, handles);
+
+function button_savesensors_Callback(hObject, eventdata, handles)
+% hObject    handle to button_savesensors (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~(handles.saved_sensors)
+    handles.saved_sensors = true;
+    pushbutton_saveas_Callback(hObject, eventdata, handles);
+else 
+  
+    file = get(handles.pushbutton_saveas,'UserData');
+    fid = fopen(file,'w');
+    titles = {'Type','X','Y'};
+    fprintf(fid, '%s,',titles{1:1:end-1});
+    fprintf(fid, '%s\n', titles{1,end});
+    sensordata = get(handles.uitable_sensors,'Data');
+    data_size = size(sensordata);
+    nsensors = data_size(1);
+    for sensor = 1:nsensors
+        fprintf(fid,'%s, %.2f, %.2f\n',sensordata{sensor,2:4});
+    end
+    fclose(fid);
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbutton_saveas.
+function pushbutton_saveas_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_saveas (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+[filename,pathname] = uiputfile({'*.csv','CSV file (*.csv)'},'Saving sensors');
+file  = fullfile(pathname,filename);
+
+if ~(isequal(filename,0) || isequal(pathname,0))
+    fid = fopen(file,'w');
+    titles = {'Type','X','Y'};
+    fprintf(fid, '%s,',titles{1:1:end-1});
+    fprintf(fid, '%s\n', titles{1,end});
+    sensordata = get(handles.uitable_sensors,'Data');
+    data_size = size(sensordata);
+    nsensors = data_size(1);
+    for sensor = 1:nsensors
+        fprintf(fid,'%s, %.2f, %.2f\n',sensordata{sensor,2:4});
+    end
+    fclose(fid);
+end
+set(handles.text_savename,'String',filename);
+set(handles.pushbutton_saveas,'UserData',file);
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+    

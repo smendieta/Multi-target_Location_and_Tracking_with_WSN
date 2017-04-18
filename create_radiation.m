@@ -34,8 +34,8 @@ function [ radiation ] = create_radiation(dimensions, users_path, precision, cal
     
     % Gaussian radiation 
     target_width_invoxels = target_width./precision;
-    radius = [target_width_invoxels(1)^2 target_width_invoxels(2)^2]; % variance(1,2) = variance(2,1) always, if not --> complex result
-   
+    %radius = [target_width_invoxels(1)^2 target_width_invoxels(2)^2]; 
+    radius = [target_width_invoxels(1) target_width_invoxels(2)]; 
     % Creating total radiation
     
     for step = (calibration_steps+1):steps
