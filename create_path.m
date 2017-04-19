@@ -9,7 +9,6 @@ function [ users_path ] = create_path( users, dimensions, total_positions, step_
 
         % Initialization
         position = floor(unifrnd(1,total_positions/2));
-                    
         gate = [floor(unifrnd(dimensions(1,1),dimensions(1,2))) floor(unifrnd(dimensions(2,1),dimensions(2,2)))]; % Deviation of the input position of each user in each side
         side = floor(4*rand);
         is_alive = true;
@@ -38,7 +37,7 @@ function [ users_path ] = create_path( users, dimensions, total_positions, step_
             if steps > rest_steps
                 steps = rest_steps; % Checking the limit of steps
             end
-            if rand < 0.5
+            if rand < 0.3   % User stops walking
                 direction = zeros(2,1); % The user is not walking
             else    % The user is walking
                 direction_angle = direction_angle+pi*unifrnd(-1/2,1/2);     % Direction angle
